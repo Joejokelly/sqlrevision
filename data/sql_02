@@ -1,0 +1,172 @@
+select * from actor;
+
+select * from film;
+
+select max(replacement_cost) from film;
+
+select min(replacement_cost) from film;
+
+select min(replacement_cost), film_id from film 
+  group by film_id
+  
+
+select * from payment;
+
+select customer_id, sum(amount) from payment
+  group by customer_id
+  order by count(amount) desc
+  
+
+select customer_id, count(amount) from payment
+  group by customer_id
+  order by count(amount) desc
+  
+select customer_id, staff_id, sum(amount) from payment
+  Group by customer_id, staff_id
+  order by customer_id
+  
+  
+select customer_id, staff_id, sum(amount) from payment
+  Group by customer_id, staff_id
+  order by sum(amount)
+  
+  
+  
+  select * from payment
+  
+  select DATE(payment_date), sum(amount) from payment
+     group by DATE(payment_date)
+	 order by sum(amount) desc
+	 
+	 
+select staff_id, count(payment_id) from payment
+  group by staff_id
+  order by staff_id desc
+  
+select customer_id, sum(amount) from payment
+	group by customer_id
+	order by sum(amount) DESC limit 5 
+	
+select * from customer
+
+select store_id, count(*) from customer
+	Group by store_id
+	having count(*) > 300
+	
+	
+select * from payment
+
+select customer_id, sum(amount) from payment
+	where staff_id = 2
+	group by customer_id
+	having sum(amount) > 100
+	
+	
+select * from payment;
+
+select amount as rental_price from payment
+
+select customer_id, sum(amount) as total_spent from payment
+Group by customer_id
+having sum(amount) > 100
+
+  
+	 
+select * from payment  
+
+select * from customer
+
+select customer_id, last_name from customer as cust
+	inner join payment on payment.customer_id = customer.customer_id
+	
+select count(*) from payment
+ inner join customer on payment.customer_id = customer.customer_id
+ 	
+select count(*) from payment
+ full outer join customer on payment.customer_id = customer.customer_id
+ where customer.customer_id IS null
+ OR payment.payment_id IS null
+
+select * from payment
+ full outer join customer on payment.customer_id = customer.customer_id
+ where customer.customer_id IS null
+ OR payment.payment_id IS null
+
+
+select * from film
+
+select * from inventory
+
+select count(*) from film
+  left join inventory on film.film_id = inventory.film_id
+  
+select count(*) from film
+ left outer join inventory on  film.film_id = inventory.film_id
+ 
+select * from film
+ UNION
+ select * from film
+ 
+ select * from payment;
+ 
+ select customer_id, sum(amount) from payment
+    Group by customer_id
+	having sum(amount) > 1.99
+	 
+SELECT dept_id, avg_sal
+FROM (
+    SELECT dept_id, AVG(salary) AS avg_sal
+    FROM employees
+    GROUP BY dept_id
+) sub
+WHERE avg_sal > 5000;
+
+select customer_id, total_sum
+ FROM (
+    select customer_id, sum(amount) AS total_sum
+	   from payment
+	    GROUP BY customer_id
+ ) sub
+ where total_sum > 1.99
+	 
+
+
+select title, rental_rate
+ FROM (
+   select title, rental_rate, avg(rental_rate) as avg_rate from film 
+	 GROUP by rental_rate
+  ) temp	
+where rental_rate > avg_rate
+
+
+SELECT title, rental_rate
+FROM (
+  SELECT title, rental_rate, AVG(rental_rate) OVER () AS avg_rate
+  FROM film
+) temp
+WHERE rental_rate > avg_rate;
+
+select film_id, title
+from film 
+  where film_id in 
+(select inventory.film_id from rental
+  inner join inventory ON inventory.inventory_id = rental.inventory_id
+   where return_date BETWEEN '2005-05-29' AND '2005-05-30'
+   order by film_id)
+   
+
+SELECT f.film_id, f.title
+FROM film f
+JOIN (
+  SELECT DISTINCT i.film_id
+  FROM rental r
+  INNER JOIN inventory i ON i.inventory_id = r.inventory_id
+  WHERE r.return_date BETWEEN '2005-05-29' AND '2005-05-30'
+) temp
+ON f.film_id = temp.film_id;
+
+
+
+
+ 
+ 

@@ -1,0 +1,272 @@
+CREATE TABLE ACCOUNT_TYPE (
+    TYPE_ID INT PRIMARY KEY,
+    TYPE_NAME VARCHAR(50)
+);
+
+
+select * from bank_branch;
+
+select * from account_type;
+
+select * from account
+
+
+
+-- Branches
+INSERT INTO BANK_BRANCH VALUES ('B001', 'MG Road Branch', 'Mumbai');
+INSERT INTO BANK_BRANCH VALUES ('B002', 'Park Street Branch', 'Kolkata');
+INSERT INTO BANK_BRANCH VALUES ('B003', 'Brigade Road Branch', 'Bangalore');
+
+-- Account Types
+INSERT INTO ACCOUNT_TYPE VALUES (1, 'Savings');
+INSERT INTO ACCOUNT_TYPE VALUES (2, 'Current');
+INSERT INTO ACCOUNT_TYPE VALUES (3, 'Fixed Deposit');
+
+-- Accounts
+INSERT INTO ACCOUNT VALUES (1001, 'Alice', 12000.00, 'B001', 1);
+INSERT INTO ACCOUNT VALUES (1002, 'Bob', 5000.00, 'B001', 2);
+INSERT INTO ACCOUNT VALUES (1003, 'Charlie', 30000.00, 'B002', 1);
+INSERT INTO ACCOUNT VALUES (1004, 'David', 100000.00, 'B003', 3);
+INSERT INTO ACCOUNT VALUES (1005, 'Eve', 15000.00, 'B001', 1);
+
+
+-- Branches
+INSERT INTO BANK_BRANCH VALUES ('B001', 'MG Road Branch', 'Mumbai');
+INSERT INTO BANK_BRANCH VALUES ('B002', 'Park Street Branch', 'Kolkata');
+INSERT INTO BANK_BRANCH VALUES ('B003', 'Brigade Road Branch', 'Bangalore');
+
+CREATE TABLE BANK_BRANCH (
+    BCODE VARCHAR(10) PRIMARY KEY,
+    BNAME VARCHAR(100),
+    CITY VARCHAR(50)
+);
+desc bank_branch
+
+
+
+drop table bank_branch cascade;
+
+drop table account cascade;
+
+drop table account_type cascade;
+
+
+CREATE TABLE BANK_BRANCH (
+    BCODE VARCHAR(10) PRIMARY KEY,
+    BNAME VARCHAR(100),
+    CITY VARCHAR(50)
+);
+
+CREATE TABLE ACCOUNT_TYPE (
+    TYPE_ID INT PRIMARY KEY,
+    TYPE_NAME VARCHAR(50)
+);
+
+CREATE TABLE ACCOUNT (
+    ACC_NO INT PRIMARY KEY,
+    CUST_NAME VARCHAR(100),
+    BALANCE DECIMAL(10, 2),
+    BCODE VARCHAR(10),
+    TYPE_ID INT,
+    FOREIGN KEY (BCODE) REFERENCES BANK_BRANCH(BCODE),
+    FOREIGN KEY (TYPE_ID) REFERENCES ACCOUNT_TYPE(TYPE_ID)
+);
+
+
+
+-- Branches
+INSERT INTO BANK_BRANCH VALUES ('B001', 'MG Road Branch', 'Mumbai');
+INSERT INTO BANK_BRANCH VALUES ('B002', 'Park Street Branch', 'Kolkata');
+INSERT INTO BANK_BRANCH VALUES ('B003', 'Brigade Road Branch', 'Bangalore');
+
+-- Account Types
+INSERT INTO ACCOUNT_TYPE VALUES (1, 'Savings');
+INSERT INTO ACCOUNT_TYPE VALUES (2, 'Current');
+INSERT INTO ACCOUNT_TYPE VALUES (3, 'Fixed Deposit');
+
+-- Accounts
+INSERT INTO ACCOUNT VALUES (1001, 'Alice', 12000.00, 'B001', 1);
+INSERT INTO ACCOUNT VALUES (1002, 'Bob', 5000.00, 'B001', 2);
+INSERT INTO ACCOUNT VALUES (1003, 'Charlie', 30000.00, 'B002', 1);
+INSERT INTO ACCOUNT VALUES (1004, 'David', 100000.00, 'B003', 3);
+INSERT INTO ACCOUNT VALUES (1005, 'Eve', 15000.00, 'B001', 1);
+
+
+
+UPDATE TABLE BANK_BRANCH (
+    BCODE VARCHAR(10) PRIMARY KEY,
+    BNAME VARCHAR(100),
+    CITY VARCHAR(50)
+);
+
+select * from bank_branch
+
+select * from account;
+
+select * from account_type;
+
+select * from bank_branch;
+
+select * from account
+
+
+\d bank_branch
+
+SELECT 
+    column_name, 
+    data_type, 
+    is_nullable, 
+    column_default
+FROM 
+    information_schema.columns
+WHERE 
+    table_name = 'bank_branch'
+    AND table_schema = 'public';
+
+
+
+SELECT 
+    column_name, 
+    data_type, 
+    is_nullable, 
+    column_default
+FROM 
+    information_schema.columns
+WHERE 
+    table_name = 'account'
+    AND table_schema = 'public';
+
+\d+ bank_branch
+
+SELECT 
+    kcu.column_name AS fk_column,
+    ccu.table_name AS referenced_table,
+    ccu.column_name AS referenced_column
+FROM 
+    information_schema.table_constraints tc
+JOIN 
+    information_schema.key_column_usage kcu 
+    ON tc.constraint_name = kcu.constraint_name
+JOIN 
+    information_schema.constraint_column_usage ccu 
+    ON ccu.constraint_name = tc.constraint_name
+WHERE 
+    tc.constraint_type = 'FOREIGN KEY'
+    AND tc.table_name = 'bank_branch'
+    AND tc.table_schema = 'public';
+
+SELECT 
+    kcu.column_name AS fk_column,
+    ccu.table_name AS referenced_table,
+    ccu.column_name AS referenced_column
+FROM 
+    information_schema.table_constraints tc
+JOIN 
+    information_schema.key_column_usage kcu 
+    ON tc.constraint_name = kcu.constraint_name
+JOIN 
+    information_schema.constraint_column_usage ccu 
+    ON ccu.constraint_name = tc.constraint_name
+WHERE 
+    tc.constraint_type = 'FOREIGN KEY'
+    AND tc.table_name = 'account'
+    AND tc.table_schema = 'public';
+
+select * from bank_branch
+
+select * from account
+
+select bb.bname, count(act.acc_no) as tot_accounts
+  from bank_branch as bb
+  left join account as act on
+  bb.bcode = act.bcode
+  group  by bb.bname
+    
+  
+select bb.bname, sum(balance) as tot_bal
+  from bank_branch bb
+   join account act on 
+   bb.bcode = act.bcode
+   group by bb.bname
+
+-- Total Balance per Branch
+SELECT BB.BNAME, SUM(A.BALANCE) AS TOTAL_BALANCE
+FROM BANK_BRANCH BB
+JOIN ACCOUNT A ON BB.BCODE = A.BCODE
+GROUP BY BB.BNAME;
+
+select * from bank_branch
+
+select * from account
+
+select * from account_type
+
+
+select bb.bname, at.type_name,at.type_id, count(*) as num_account
+  from bank_branch bb
+  join account act on act.bcode = bb.bcode
+  join account_type at on act.type_id = at.type_id
+  group by bb.bname, at.type_id
+  
+-- Number of Accounts per Branch and Account Type
+SELECT BB.BNAME, AT.TYPE_NAME, COUNT(*) AS NUM_ACCOUNTS
+FROM ACCOUNT A
+JOIN BANK_BRANCH BB ON A.BCODE = BB.BCODE
+JOIN ACCOUNT_TYPE AT ON A.TYPE_ID = AT.TYPE_ID
+GROUP BY BB.BNAME, AT.TYPE_NAME;
+
+-- branch no accooutn
+
+select bb.bname, count(*) as tot_account
+  from bank_branch bb
+   left join account act on bb.bcode = act.bcode
+   where act.acc_no is null
+    group by bb.bname
+
+SELECT BB.BNAME
+FROM BANK_BRANCH BB
+LEFT JOIN ACCOUNT A ON BB.BCODE = A.BCODE
+WHERE A.ACC_NO IS NULL;
+
+
+-- Highest balance per branch --
+
+select * from account
+
+select bb.bname, max(balance) 
+  from bank_branch bb
+  join account act on bb.bcode = act.bcode
+  group by bb.bname
+  
+SELECT BB.BNAME, MAX(A.BALANCE) AS MAX_BALANCE
+FROM ACCOUNT A
+JOIN BANK_BRANCH BB ON A.BCODE = BB.BCODE
+GROUP BY BB.BNAME;
+  
+-- Customer Details by Account Type and Branch  
+
+select act.cust_name, act.type_id, bb.bname
+ from account act
+ join bank_branch bb on act.bcode = bb.bcode
+ join account_type at on act.type_id = at.type_id 
+  group by act.cust_name, bb.bname, act.type_id;
+  
+SELECT A.CUST_NAME, BB.BNAME, AT.TYPE_NAME, A.BALANCE
+FROM ACCOUNT A
+JOIN BANK_BRANCH BB ON A.BCODE = BB.BCODE
+JOIN ACCOUNT_TYPE AT ON A.TYPE_ID = AT.TYPE_ID
+ORDER BY BB.BNAME, AT.TYPE_NAME, A.BALANCE DESC;
+
+
+select act.cust_name, at.type_id, bb.bname, act.balance
+ from account act
+ join bank_branch bb on act.bcode = bb.bcode
+ join account_type at on act.type_id = at.type_id 
+   order by act.cust_name, at.type_name, act.balance;
+ 
+
+  
+
+
+
+

@@ -1,0 +1,41 @@
+select * from actor;
+
+select * from customer;
+
+select first_name, last_name, email from customer;
+
+
+select count(*) from actor;
+
+
+select count(*) from customer;
+
+select count(*) from payment;
+
+select * from film;
+
+select count(*) from film 
+ where rental_rate > 4 and replacement_cost >= 19.99
+ and rating = 'R'
+ 
+select * from customer;
+
+select store_id, first_name, last_name from customer
+  order by store_id, first_name;
+  
+select store_id, first_name, last_name from customer
+  order by store_id, first_name limit(10);
+  
+ select * from payment;
+ 
+
+select * from payment where amount in (0.99, 7.99)
+
+
+
+
+ 
+ 
+
+
+
