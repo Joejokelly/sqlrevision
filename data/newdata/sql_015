@@ -1,0 +1,287 @@
+
+
+select * from encounters;
+
+set search_path to general_hospital;
+
+select current_user
+
+select session_user
+
+ALTER ROLE 	 postgres set search_path to general_hospital;
+
+select * from encounters;
+
+-- Temp tablle
+
+
+create temp table create_top_counties AS
+ select county, count(*)
+  FROM patients 
+   GROUP BY county
+   HAVING count(*) > 1500;
+   
+ select * from create_top_counties
+ 
+   
+ if exists drop table create_top_counties
+
+select * from patients;
+
+-- surgical encouters per county
+
+if exists drop table create_top_counties;
+
+if exists drop table temp_county_patients
+
+
+DROP TABLE IF EXISTS create_top_counties;
+
+DROP TABLE IF EXISTS temp_county_patients;
+
+create temp table create_top_counties AS
+ select county, count(*)
+  FROM patients 
+   GROUP BY county
+   HAVING count(*) > 1500;
+   
+create temp table temp_county_patients AS
+  select p.master_patient_id, p.county
+     from patients p
+	 inner join create_top_counties t on 
+	 p.county = t.county;
+	 
+	 
+select county, count(surgery_id) as total_surgery
+   from surgical_encounters s
+    inner join temp_county_patients t on
+	t.master_patient_id = s.master_patient_id
+	group by county;
+	 
+---
+drop table if exists temp_top_counties;
+drop table if exists temp_county_patients;
+
+CREATE TEMP TABLE temp_top_counties AS
+SELECT county
+FROM patients
+GROUP BY county
+HAVING COUNT(*) > 1500;
+
+-- Step 2: Create temp table for patients in top counties
+CREATE TEMP TABLE temp_county_patients AS
+SELECT p.master_patient_id, p.county
+FROM patients p
+JOIN temp_top_counties t ON p.county = t.county;
+
+-- Step 3: Final query - count surgeries for patients from top counties
+SELECT cp.county, COUNT(se.surgery_id) AS total_surgeries
+FROM surgical_encounters se
+JOIN temp_county_patients cp ON se.master_patient_id = cp.master_patient_id
+GROUP BY cp.county;
+
+-- county & total_surgeries
+
+
+SELECT cp.county, COUNT(s.surgery_id) AS total_surgeries
+FROM surgical_encounters s
+INNER JOIN (
+    SELECT p.master_patient_id, p.county
+    FROM patients p
+    INNER JOIN (
+        SELECT county
+        FROM patients
+        GROUP BY county
+        HAVING COUNT(*) > 1500
+    ) tp ON p.county = tp.county
+) cp ON s.master_patient_id = cp.master_patient_id
+GROUP BY cp.county;
+
+-- county & total surgeries
+
+
+select * from surgical_encounters;
+
+
+select * from patients
+
+
+select county, count(s.surgery_id) 
+  from surgical_encounters s
+  group by county
+inner join (
+   select county, master_patient_id  
+     from patients p
+	inner join (
+		select county, count(*) 
+		  on patients 
+		where count(*) > 1500
+ 	) tp on p.county = 
+ 	
+		
+ )
+
+----
+
+select * from patients
+
+select * from surgical_encounters;
+
+-- county > count(*) > 1500
+-- get patients from county
+-- join with surgical encounters
+
+select se.county, count(s.surgery_id) 
+  from surgical_encounters s
+  inner join ( 
+	select p.master_patient_id, p.county
+	  from patients p 
+	  inner join (
+		select county, count(*) 
+		from patients
+		group by county
+		having count(*) > 1500
+	) tp on p.county = tp.county
+) se on s.master_patient_id = se.master_patient_id
+  group by se.county
+
+Step	Action	Result
+1	Find counties with >1500 patients	tp (just list of counties)
+2	Join tp with patients to get patients	cp (filtered list of patients)
+3	Join cp with surgical_encounters	All surgeries for those patients
+4	Group by county	Count surgeries per qualifying county
+
+🛠 Example Flow (like your query):
+🔍 “What counties have >1500 patients?”
+→ Write a GROUP BY + HAVING on patients
+
+🔗 “Get all patients in those counties”
+→ Join patients with the above subquery
+
+🔗 “Get surgical encounters for those patients”
+→ Join with surgical_encounters
+
+📊 “Count surgeries per county”
+→ GROUP BY county, COUNT(surgery_id)
+
+** county, patient, surgical_encounter
+-- (1) county with > 1500 patients
+-- (2) GET ALL PATIENTS	 in those county
+
+select * from patients
+
+select * from surgical_encounters;
+
+select county, count(s.surgery_id) as total_surgery
+from surgical_encounters s
+inner join (
+	select p.master_patient_id, p.county
+		from patients p
+		inner join (
+			select county 
+			  from patients
+			  group by county
+			  having count(*) > 1500
+	  ) tp on  tp.county = p.county
+) cp on cp.master_patient_id = s.master_patient_id
+group by cp.county
+
+--
+1)Find counties with the highest average number of surgeries per patient
+2)Find patients who had a surgery but never had a lab test
+3)Find the most common surgery type per county
+4)Track repeat surgery patients
+
+
+
+
+select county, count(s.surgery_id) as total_surgery
+from surgical_encounters s
+inner join (
+	select p.master_patient_id, p.county
+		from patients p
+		inner join (
+			select county 
+			  from patients
+			  group by county
+			  having count(*) > 500
+	  ) tp on  tp.county = p.county
+) cp on cp.master_patient_id = s.master_patient_id
+group by cp.county
+
+
+1. Total number of patients per county
+
+select * from patients;
+
+select county, count(distinct master_patient_id) as total_patient
+   from patients
+   group by county
+   having count(distinct master_patient_id) >= 100
+   
+2. Total surgerys per county
+
+select * from surgical_encounters
+
+select se.county, count(s.surgery_id), s.master_patient_id 
+   from surgical_encounters s
+	 inner join (
+		select count(master_patient_id), county, 
+		   count(distinct p.master_patient_id) as total_pat
+		   from patients p
+		   group by county
+		   having count(distinct p.master_patient_id) >= 100 
+	 ) se on se.master_patient_id = s.master_patient_id
+
+---
+select * from patients;
+
+select se.county, 
+		count(s.surgery_id) as total_surgeries, 
+		count (distinct s.master_patient_id) as distinct_patient,
+		ROUND(COUNT(s.surgery_id) * 1.0 / COUNT(DISTINCT s.master_patient_id), 2) 
+		 AS avg_surgeries_per_patient
+		from surgical_encounters s
+	inner join (
+		select p.master_patient_id, p.county 
+			from patients p 
+			inner join (	
+				select county 
+				  from patients 
+				  Group by county
+				  having count(distinct master_patient_id) >= 100
+			 ) mp on p.county = mp.county
+	  ) se on se.master_patient_id = s.master_patient_id
+	group by se.county
+	order by avg_surgeries_per_patient desc
+	limit 10;
+	
+--
+
+SELECT se.county,
+       COUNT(s.surgery_id) AS total_surgeries,
+       COUNT(DISTINCT s.master_patient_id) AS total_patients,
+       ROUND(COUNT(s.surgery_id) * 1.0 / COUNT(DISTINCT s.master_patient_id), 2) AS avg_surgeries_per_patient
+FROM surgical_encounters s
+INNER JOIN (
+    SELECT p.master_patient_id, p.county
+    FROM patients p
+    WHERE p.county IN (
+        SELECT county
+        FROM patients
+        GROUP BY county
+        HAVING COUNT(DISTINCT master_patient_id) >= 100
+    )
+) se ON s.master_patient_id = se.master_patient_id
+GROUP BY se.county
+ORDER BY avg_surgeries_per_patient DESC
+LIMIT 10;
+
+
+  
+
+
+
+
+
+

@@ -1,0 +1,210 @@
+
+select * from general_hospital.accounts;
+
+set search_path to general_hospital;
+
+
+select * from accounts;
+
+select * from patients;
+
+select * 
+ from (
+	select * from patients 
+	  where date_of_birth >= '2000-01-01'
+	  order by master_patient_id 
+) p
+where p.name ilike 'm%'
+---
+
+select * 
+  from (
+  select * from patients
+   where date_of_birth >= '2000-01-01'
+	order by master_patient_id
+	) p
+	where p.name ilike 'm%'
+	
+select se.* 
+from(
+	select * 
+	 from surgical_encounters
+	   where surgical_admission_date >= '2010-01-01'
+ ) se
+ inner join (
+ 	select master_patient_id from patients
+    where date_of_birth >= '1999-01-01'    
+ ) p on se.master_patient_id = p.master_patient_id
+ 
+ 	
+select * from patients;
+select * from surgical_encounters;
+
+select se.* 
+ from (
+ select * from surgical_encounters 
+  where surgical_admission_date >= '2000-01-01'
+) se
+  inner join (
+  select master_patient_id 
+	  from patients 
+	where date_of_birth >= '1999-01-01'
+) p on se.master_patient_id = p.master_patient_id;
+
+with young_patients as (
+	select * 
+	   from patients
+		where date_of_birth >= '2000-01-01'
+) 
+select * from young_patients
+  where name ilike 'm%'
+  
+select *
+ from (
+  select * 
+	   from patients
+		where date_of_birth >= '2000-01-01'
+) p where p.name ilike 'm%' 
+  
+--- county number of surgeries
+
+with top_counties as (
+	select county, count(*) from patients
+		group by county
+			having count(*) > 1500
+ ),
+  county_patients as (
+    select p.master_patient_id, p.county
+	    from patients p
+	  inner join top_counties t on 
+	   p.county = t.county
+  )
+ select p.county, count(s.surgery_id) as num_surgeries from surgical_encounters s  
+  inner join county_patients p on 
+   s.master_patient_id = p.master_patient_id
+   group by p.county;
+   
+--
+select * from surgical_costs
+
+with total_cost as (
+	select surgery_id,
+	 sum(resource_cost) as total_surgery_cost
+	 from  surgical_costs se
+	 group by surgery_id	
+)
+select * from total_cost
+  where total_surgery_cost >
+  (
+  	select avg(total_surgery_cost) from total_cost
+  )
+
+----
+
+select * from vitals
+
+select *
+  from vitals
+   where bp_diastolic > (select min(bp_diastolic) from vitals)
+   and bp_systolic < (select max(bp_diastolic) from vitals)
+   
+--
+
+select * from surgical_encounters;
+
+select * 
+from patients
+where master_patient_id not in ( 
+	select distinct(master_patient_id) from surgical_encounters
+)
+order by master_patient_id;
+
+
+select * from accounts;
+
+set search_path to general_hospital;
+
+--- county number of surgeries
+
+with top_counties as (
+	select county, count(*) from patients
+		group by county
+			having count(*) > 1500
+ ),
+  county_patients as (
+    select p.master_patient_id, p.county
+	    from patients p
+	  inner join top_counties t on 
+	   p.county = t.county
+  )
+ select p.county, count(s.surgery_id) as num_surgeries from surgical_encounters s  
+  inner join county_patients p on 
+   s.master_patient_id = p.master_patient_id
+   group by p.county;
+   
+
+
+select * from patients;
+
+select * from surgical_encounters;
+
+-- county number of surgeries
+-- cte.
+-- 
+
+select * from patients
+
+
+with top_counties as (
+ select county, count(*) as total_counties from patients 
+   group by county
+	having count(*) > 1500
+),
+ county_patients as (
+  select p.master_patient_id, p.county 
+	  from patients p
+ 	inner join top_counties t on p.county = t.county	 
+ )
+select p.county, count(surgery_id) as total_surgeries from surgical_encounters se
+    inner join county_patients p on se.master_patient_id = p.master_patient_id
+	group by county;
+
+
+WITH top_counties AS (
+    SELECT county, COUNT(*) AS total_counties
+    FROM patients 
+    GROUP BY county
+    HAVING COUNT(*) > 1500
+),
+county_patients AS (
+    SELECT p.master_patient_id, p.county 
+    FROM patients p
+    INNER JOIN top_counties t ON p.county = t.county	 
+)
+SELECT p.county, COUNT(se.surgery_id) AS total_surgeries
+FROM surgical_encounters se
+INNER JOIN county_patients p ON se.master_patient_id = p.master_patient_id
+GROUP BY p.county;
+
+WITH top_counties AS (
+    SELECT county, COUNT(*) AS total_counties
+    FROM patients 
+    GROUP BY county
+    HAVING COUNT(*) > 1500
+),
+county_patients AS (
+    SELECT p.master_patient_id, p.county 
+    FROM patients p
+    INNER JOIN top_counties t ON p.county = t.county	 
+)
+SELECT p.county, COUNT(se.surgery_id) AS total_surgeries
+FROM surgical_encounters se
+INNER JOIN county_patients p ON se.master_patient_id = p.master_patient_id
+GROUP BY p.county;
+
+
+
+
+
+
+
