@@ -1,0 +1,198 @@
+select * from accounts;
+
+
+select * from encounters;
+select * from surgical_encounters;
+
+--For each county, find the top 2 patients with the highest number of surgeries
+
+select * from patients;
+
+select county from patients;
+
+select distinct county from patients;
+
+select * from surgical_encounters;
+
+
+select master_patient_id, county, total_surgeries 
+from (
+	select master_patient_id, county, total_surgeries, 
+	   row_number() over (partition by county order by total_surgeries desc) as rn
+	  from (
+		select s.master_patient_id, se.county, count(s.surgery_id) as total_surgeries
+			from surgical_encounters s
+		   inner join (	
+			select master_patient_id, county
+			   from patients
+			 ) se on s.master_patient_id = se.master_patient_id
+			 group by s.master_patient_id, se.county
+			order by total_surgeries desc
+	) as surgery_count	
+) as ranked
+	where rn <= 2
+order by county, total_surgeries desc
+ 	
+---
+
+SELECT master_patient_id, county, total_surgeries
+FROM (
+    SELECT master_patient_id, county, total_surgeries, 
+           ROW_NUMBER() OVER (PARTITION BY county ORDER BY total_surgeries DESC) AS rn
+    FROM (
+        SELECT s.master_patient_id, se.county, COUNT(s.surgery_id) AS total_surgeries
+        FROM surgical_encounters s
+        INNER JOIN (
+            SELECT master_patient_id, county
+            FROM patients
+        ) se ON s.master_patient_id = se.master_patient_id
+        GROUP BY s.master_patient_id, se.county
+        ORDER BY total_surgeries DESC
+    ) AS surgery_count	
+) AS ranked
+WHERE rn <= 2
+ORDER BY county, total_surgeries DESC;
+
+----
+
+SELECT master_patient_id, county, total_surgeries
+FROM (
+    SELECT master_patient_id, county, total_surgeries, 
+           RANK() OVER (PARTITION BY county ORDER BY total_surgeries DESC) AS rnk
+    FROM (
+        SELECT s.master_patient_id, p.county, COUNT(s.surgery_id) AS total_surgeries
+        FROM surgical_encounters s
+        JOIN patients p ON s.master_patient_id = p.master_patient_id
+        GROUP BY s.master_patient_id, p.county
+    ) AS surgery_count
+) AS ranked
+WHERE rnk <= 2
+ORDER BY county, total_surgeries DESC;
+
+---
+SELECT master_patient_id, county, total_surgeries
+FROM (
+    SELECT master_patient_id, county, total_surgeries, 
+           ROW_NUMBER() OVER (PARTITION BY county ORDER BY total_surgeries DESC) AS rn
+    FROM (
+        SELECT s.master_patient_id, p.county, COUNT(s.surgery_id) AS total_surgeries
+        FROM surgical_encounters s
+        JOIN patients p ON s.master_patient_id = p.master_patient_id
+        GROUP BY s.master_patient_id, p.county
+    ) AS surgery_count	
+) AS ranked
+WHERE rn <= 2
+ORDER BY county, total_surgeries DESC;
+
+<<<>>>
+
+
+select * from patients;
+
+select * from surgical_encounters;
+
+-- patient per county
+select s.master_patient_id, p.county, count(surgery_id) as total_surgery 
+  from patients p
+  inner join surgical_encounters s 
+  on s.master_patient_id = p.master_patient_id
+  group by s.master_patient_id, p.county;
+  
+
+--ranking for patient per county
+
+ select master_patient_id, county, total_surgery
+ from (
+	 select master_patient_id, 
+		county,
+		total_surgery,
+		row_number() over (
+		 partition by county
+			order by total_surgery desc
+		) as rn
+	from (
+		select s.master_patient_id, p.county, count(surgery_id) as total_surgery 
+		  from patients p
+		  inner join surgical_encounters s 
+		  on s.master_patient_id = p.master_patient_id
+		  group by s.master_patient_id, p.county
+	) surgery_count
+  ) ranked
+ where  rn <= 2
+  order by county, total_surgery desc
+	
+-- cte
+
+with total_surgery_count as (
+    	select s.master_patient_id, p.county, count(surgery_id) as total_surgery 
+		  from patients p
+		  inner join surgical_encounters s 
+		  on s.master_patient_id = p.master_patient_id
+		  group by s.master_patient_id, p.county
+), 
+ranked_patients AS (
+  select master_patient_id, county, 
+	  total_surgery, row_number() over (
+	  	partition by county order by total_surgery  desc		  
+	  ) as rn
+	from total_surgery_count
+)
+select master_patient_id, 
+   county, total_surgery from ranked_patients
+   where rn <= 2
+   order by county, total_surgery desc;
+
+-- Udemy Advanced course
+
+select se.* 
+  from ( 
+  select * from surgical_encounters se
+  where surgical_admission_date
+  between '2016-11-01' and '2016-11-30'
+  ) se
+inner join (
+  select master_patient_id 
+	  from patients 
+  ) p on p.master_patient_id = se.master_patient_id; 
+  
+- cte
+
+with young_patients as (
+select * 
+ from patients 
+ where date_of_birth >= '2000-01-01'
+)
+select * 
+from young_patients
+where name ilike '%'
+
+--cte 2
+
+with top_counties as (
+ select county, count(*) as num_patients
+	from patients
+  group by county 
+	having count(*) > 1500
+),
+county_patients as (
+	select p.master_patient_id, p.county
+		from patients p
+		inner join top_counties t on
+		p.county = t.county
+	
+)
+select p.county, count(s.surgery_id) as num_surgeries
+ from surgical_encounters s
+ inner join county_patients p on
+ s.master_patient_id = p.master_patient_id
+ group by p.county
+ 
+-- sub query
+
+select * 
+from vitals
+where bp_diastolic > (select min(bp_diastolic) from vitals)
+ and bp_systolic < (select max(bp_systolic) from vitals)
+
+
+

@@ -1,0 +1,234 @@
+select * from employees
+
+
+select * from accounts;
+
+
+select primary_icd, admit_icd
+		row_number() over (partition by account_icd order by total_account_balance desc) as rn
+		
+CREATE TABLE employees (
+    emp_id    NUMBER PRIMARY KEY,
+    name      VARCHAR2(50),
+    dept      VARCHAR2(50),
+    salary    NUMBER
+);
+
+CREATE TABLE employees (
+    emp_id   INTEGER PRIMARY KEY,
+    name     VARCHAR(50),
+    dept     VARCHAR(50),
+    salary   INTEGER
+);
+
+INSERT INTO employees VALUES 
+(101, 'John',   'HR',    5000),
+(102, 'Alice',  'HR',    6000),
+(103, 'Bob',    'IT',    7000),
+(104, 'Carol',  'IT',    8000),
+(105, 'Dave',   'IT',    7000),
+(106, 'Eva',    'Sales', 6500),
+(107, 'Frank',  'Sales', 6000),
+(108, 'Grace',  'Sales', 7000);
+
+
+select * from employees;
+
+-- rown_number()
+SELECT emp_id, name, dept, salary,
+       ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC) AS rn
+FROM employees;
+
+SELECT emp_id, name, salary,
+       RANK() OVER (ORDER BY salary DESC) AS rnk,
+       DENSE_RANK() OVER (ORDER BY salary DESC) AS dense_rnk
+FROM employees;
+
+
+select emp_id, name, dept, salary,
+ row_number() over (partition by dept order by salary desc) as rn
+ from employees;
+ 
+
+select emp_id, name, dept, salary,
+  row_number() over (partition by dept order by salary desc) as rn
+  from employees;
+		
+		
+row_number() over (partition by dept order by salary desc) as rn
+
+row_number() over (partition by dept order by salary desc) as rn
+
+rank() over (partitoion by dept order by salary desc) as  rnk
+
+
+select emp_id, name, dept, salary,
+ rank() over (partition by dept order by salary desc) as rnk
+from employees;
+
+		
+		
+select emp_id, name, dept, salary, 
+  rank() over (partition by dept order by salary desc) rnk
+from employees;
+		
+		
+
+
+
+select emp_id, name, dept, salary, 
+ row_number() over (partition by dept order by salary desc) rn
+from employees;
+
+
+-- accounts;
+
+select * from accounts;
+
+select 
+   account_id, primary_icd, total_account_balance,
+   rank() over (partition by primary_icd order by total_account_balance desc) as account_rank_desc
+   from accounts;
+
+select * from physicians
+
+select * from surgical_encounters 
+
+
+
+select s.surgery_id, p.full_name,  
+  s.total_profit, 
+  avg(total_profit) over w as avg_total_profit,	 
+  s.total_cost,
+  sum(total_cost) over w as total_surgeon_cost
+from surgical_encounters s
+left outer join physicians p
+  on s.surgeon_id = p.id
+  window w as (partition by s.surgeon_id)
+
+--
+
+select s.surgery_id, p.full_name,  
+  s.total_profit, 
+  avg(total_profit) over (partition by s.surgeon_id) as avg_total_profit,	 
+  s.total_cost,
+  sum(total_cost) over (partition by s.surgeon_id) as total_surgeon_cost,
+  row_number() over (partition by s.surgeon_id order by s.total_profit desc) as profit_rank
+  from surgical_encounters s
+left outer join physicians p
+  on s.surgeon_id = p.id
+  
+ 
+SELECT 
+  s.surgery_id, 
+  p.full_name,  
+  s.total_profit, 
+  AVG(s.total_profit) OVER (PARTITION BY s.surgeon_id) AS avg_total_profit,	 
+  s.total_cost,
+  SUM(s.total_cost) OVER (PARTITION BY s.surgeon_id) AS total_surgeon_cost,
+  ROW_NUMBER() OVER (PARTITION BY s.surgeon_id ORDER BY s.total_profit DESC) AS profit_rank
+FROM surgical_encounters s
+LEFT OUTER JOIN physicians p
+  ON s.surgeon_id = p.id;
+		
+-- 30 days prev surgeery
+
+
+select * from surgical_encounters;
+
+select surgery_id, master_patient_id, surgery_admission_date, 
+
+-- 1) cte
+with surgeries_lagged as (
+  select 
+	surgery_id,
+	master_patient_id,
+	surgical_admission_date,
+	surgical_discharge_date,
+	lag(surgical_discharge_date) over
+	  (partition by master_patient_id order by surgical_admission_date)
+	   as previous_discharge_date
+	  from surgical_encounters s
+	)
+select *, 
+	(surgical_admission_date - previous_discharge_date)
+		as days_between_surgeries
+from surgeries_lagged
+	where (surgical_admission_date - previous_discharge_date) <= 30;
+	
+
+-- 2) not using cte, dervived tables
+
+
+select * from surgical_encounters
+
+select 
+	t.*, 
+	(t.surgical_discharge_date - t.previous_discharge_date) as days_between_surgeries
+	from (
+	select 
+		master_patient_id, surgery_id, 
+		 surgical_admission_date, surgical_discharge_date,
+		 lag(surgical_discharge_date) over
+			(partition by master_patient_id order by surgical_admission_date  )	  
+			as previous_discharge_date 
+			from surgical_encounters s
+  )	t
+  where (t.surgical_admission_date - t.previous_discharge_date) <= 30;
+		
+		
+-- 3) temp table.		
+		
+-- Step 1: Create the temp table with previous surgery dates
+CREATE TEMP TABLE temp_surgeries_lagged AS
+SELECT 
+  s.surgery_id,
+  s.master_patient_id,
+  s.surgical_admission_date,
+  s.surgical_discharge_date,
+  LAG(s.surgical_discharge_date) OVER (
+    PARTITION BY s.master_patient_id 
+    ORDER BY s.surgical_admission_date
+  ) AS previous_discharge_date
+FROM surgical_encounters s;
+
+-- Step 2: Query surgeries within 30 days of the last one
+SELECT *, 
+       (surgical_admission_date - previous_discharge_date) AS days_between_surgeries
+FROM temp_surgeries_lagged
+WHERE (surgical_admission_date - previous_discharge_date) <= 30;
+
+-- Exc Query #2
+
+with provider_department as (
+ select
+	admitting_provider_id,
+	department_id,
+	count(*) as num_encounters	
+	from encounters
+	group by admitting_provider_id, department_id
+),
+ pd_ranked as (
+  select 
+	 *,
+	 row_number() over
+	  (partition by department_id order by num_encounters desc)
+ 	as encounter_rank
+	 from provider_department
+ )
+select 
+   d.department_name, 
+   p.full_name as physician_name,
+   num_encounters,
+   encounter_rank
+from pd_ranked pd	 
+ left outer join physicians p
+  on p.id = pd.admitting_provider_id
+  left outer join departments d
+   on d.department_id = pd.department_id
+  where 
+  	encounter_rank <= 3;
+	
+   
+  
+
